@@ -1,4 +1,4 @@
-# Beauty Store
+
 
 ## Descrição do Projeto
 
