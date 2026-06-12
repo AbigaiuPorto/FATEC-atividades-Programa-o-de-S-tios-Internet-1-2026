@@ -269,7 +269,57 @@ header h1 {
 /* =========================
    ADMIN
 ========================= */
+/* =========================
+   UPLOAD IMAGEM
+========================= */
 
+.upload-card {
+    width: 120px;
+    height: 80x;
+
+    border: 2px dashed var(--primary-pink);
+    border-radius: 12px;
+
+    background: var(--white);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    gap: 6px;
+
+    cursor: pointer;
+    overflow: hidden;
+
+    transition: .3s ease;
+}
+
+.upload-card:hover {
+    background: #fff5f9;
+    transform: scale(1.02);
+}
+
+.upload-card span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-pink);
+    text-align: center;
+    padding: 8px;
+    line-height: 1.3;
+}
+
+.preview-produto {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Quando tiver imagem */
+.upload-card img[src] + span {
+    display: none;
+}
 .admin-cosmeticos {
     padding: 32px;
     min-height: 100vh;

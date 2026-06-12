@@ -1,12 +1,14 @@
 'use strict'
 
+import { uploadParaCloudinary } from '../cloudinay.js'
 import { navegarPara } from '../app.js'
 
-const URL = 'https://base-back-dwpz.onrender.com/produtos'
+const API_URL = 'https://base-back-dwpz.onrender.com/produtos'
 
 export function criarAdmin() {
 
     let editId = null
+    let imagemAtual = ''
 
     const pagina = document.createElement('section')
     pagina.className = 'admin-cosmeticos'
@@ -81,21 +83,54 @@ export function criarAdmin() {
     inputPreco.type = 'number'
     inputPreco.placeholder = 'Preço'
 
-    const inputImagem = document.createElement('input')
-    inputImagem.placeholder = 'URL da imagem'
+    const uploadCard = document.createElement('label')
+uploadCard.className = 'upload-card'
+
+const inputImagem = document.createElement('input')
+inputImagem.type = 'file'
+inputImagem.accept = 'image/*'
+inputImagem.hidden = true
+
+const preview = document.createElement('img')
+preview.className = 'preview-produto'
+preview.style.display = 'none'
+
+const textoUpload = document.createElement('span')
+textoUpload.textContent =
+    '📷 Clique para adicionar uma imagem'
+
+uploadCard.append(
+    preview,
+    textoUpload,
+    inputImagem
+)
+
+inputImagem.addEventListener('change', ({ target }) => {
+
+    if (!target.files.length) return
+
+    preview.src = URL.createObjectURL(
+        target.files[0]
+    )
+
+    preview.style.display = 'block'
+
+    textoUpload.textContent =
+        'Imagem selecionada'
+})
 
     const btnSalvar = document.createElement('button')
     btnSalvar.type = 'button'
     btnSalvar.className = 'btn-salvar'
     btnSalvar.textContent = 'Cadastrar produto'
 
-    form.append(
-        inputNome,
-        inputDescricao,
-        inputPreco,
-        inputImagem,
-        btnSalvar
-    )
+   form.append(
+    inputNome,
+    inputDescricao,
+    inputPreco,
+    uploadCard,
+    btnSalvar
+)
 
     formWrapper.append(tituloForm, form)
 
@@ -112,43 +147,55 @@ export function criarAdmin() {
     const lista = document.createElement('div')
     lista.className = 'admin-lista'
 
-    // =========================
-    // GET
-    // =========================
+  
     async function carregar() {
 
-        try {
+    try {
 
-            const resposta = await fetch(URL)
-            const produtos = await resposta.json()
+       const token = localStorage.getItem('accessToken')
 
-            lista.replaceChildren()
+        const resposta = await fetch(API_URL, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
 
-            totalProdutos.textContent = produtos.length
+        if (!resposta.ok) {
+            throw new Error('Erro na API: ' + resposta.status)
+        }
 
-            const receita = produtos.reduce((total, produto) => {
-                return total + Number(produto.preco || 0)
-            }, 0)
+        const produtos = await resposta.json()
 
-            totalReceita.textContent = receita.toLocaleString(
-                'pt-BR',
-                {
-                    style: 'currency',
-                    currency: 'BRL'
-                }
-            )
+        lista.replaceChildren()
 
-            produtos.forEach(produto => {
+        totalProdutos.textContent = produtos.length
+
+        const receita = produtos.reduce((total, produto) => {
+            return total + Number(produto.preco || 0)
+        }, 0)
+
+        totalReceita.textContent = receita.toLocaleString(
+            'pt-BR',
+            {
+                style: 'currency',
+                currency: 'BRL'
+            }
+        )
+
+        produtos.forEach(produto => {
+            // resto do seu código continua igual
 
                 const card = document.createElement('div')
                 card.className = 'admin-card'
+const IMAGEM_PADRAO = '/img/beauty.png'
+const imagem = document.createElement('img')
 
-                const imagem = document.createElement('img')
-                imagem.src =
-                    produto.imagem ||
-                    'https://via.placeholder.com/120'
+imagem.src = produto.imagem || IMAGEM_PADRAO
+imagem.alt = produto.nome
 
-                imagem.alt = produto.nome
+imagem.onerror = () => {
+    imagem.src = IMAGEM_PADRAO
+}
 
                 const info = document.createElement('div')
                 info.className = 'info'
@@ -198,9 +245,12 @@ export function criarAdmin() {
 
                     inputPreco.value =
                         produto.preco || ''
+                        imagemAtual = produto.imagem || ''
+preview.src = produto.imagem
+preview.style.display = 'block'
 
-                    inputImagem.value =
-                        produto.imagem || ''
+textoUpload.textContent =
+    'Imagem atual'
 
                     editId = produto.id
 
@@ -216,19 +266,13 @@ export function criarAdmin() {
 
                 btnExcluir.onclick = async () => {
 
-                    const token =
-                        localStorage.getItem('token')
-
-                    await fetch(
-                        `${URL}/${produto.id}`,
-                        {
-                            method: 'DELETE',
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`
-                            }
-                        }
-                    )
+                     const token = localStorage.getItem('accessToken')
+                    await fetch(`${API_URL}/${produto.id}`, {
+    method: 'DELETE',
+    headers: {
+        Authorization: `Bearer ${token}`
+    }
+})
 
                     carregar()
                 }
@@ -261,21 +305,29 @@ export function criarAdmin() {
     // =========================
     btnSalvar.onclick = async () => {
 
-        const token =
-            localStorage.getItem('token')
+        const token =localStorage.getItem('accessToken')
+let urlImagem = imagemAtual
 
-        const produto = {
-            nome: inputNome.value,
-            descricao: inputDescricao.value,
-            preco: Number(inputPreco.value),
-            imagem: inputImagem.value
-        }
+if (inputImagem.files.length) {
+
+    urlImagem =
+        await uploadParaCloudinary(
+            inputImagem.files[0]
+        )
+}
+
+const produto = {
+    nome: inputNome.value,
+    descricao: inputDescricao.value,
+    preco: Number(inputPreco.value),
+    imagem: urlImagem
+}
 
         try {
 
             if (!editId) {
 
-                await fetch(URL, {
+                await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type':
@@ -289,7 +341,7 @@ export function criarAdmin() {
             } else {
 
                 await fetch(
-                    `${URL}/${editId}`,
+                  `${API_URL}/${editId}`,
                     {
                         method: 'PATCH',
                         headers: {
@@ -308,10 +360,18 @@ export function criarAdmin() {
                     'Cadastrar produto'
             }
 
-            inputNome.value = ''
-            inputDescricao.value = ''
-            inputPreco.value = ''
-            inputImagem.value = ''
+          inputNome.value = ''
+inputDescricao.value = ''
+inputPreco.value = ''
+inputImagem.value = ''
+
+preview.src = ''
+preview.style.display = 'none'
+
+textoUpload.textContent =
+    '📷 Clique para adicionar uma imagem'
+
+imagemAtual = ''
 
             carregar()
 

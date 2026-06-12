@@ -21,8 +21,19 @@ function criarCard(produto) {
     const card = document.createElement('article')
     card.classList.add('card-cosmetico')
 
-    const imagem = document.createElement('img')
-    imagem.src = produto.imagem || 'https://via.placeholder.com/300'
+    const IMAGEM_PADRAO = '/img/beauty.png'
+
+const imagem = document.createElement('img')
+
+imagem.src = produto.imagem?.trim()
+    ? produto.imagem
+    : IMAGEM_PADRAO
+
+imagem.alt = produto.nome || 'Produto'
+
+imagem.onerror = () => {
+    imagem.src = IMAGEM_PADRAO
+}
     imagem.alt = produto.nome
 
     const nome = document.createElement('h3')
