@@ -1,5 +1,4 @@
 
-
 ## Descrição do Projeto
 
 Beauty Store é uma aplicação web desenvolvida para gerenciamento e visualização de produtos cosméticos. O sistema permite que usuários visualizem produtos cadastrados e que administradores realizem operações completas de cadastro, edição e exclusão por meio de um painel administrativo.
